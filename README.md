@@ -4,7 +4,7 @@
 
 |Name|email@|Role|
 |----|------|----|
-|Benjamin Söllner|post@benkku.com||
+|Benjamin Söllner|benjamin.soellner@daimler.com||
 |Bernhard Rode|mail@bernhardrode.de||
 |Carsten Mielenz|carsten.mielenz.france@gmail.com||
 |Johannes Hallier|johannes.hallier@gmail.com||
