@@ -6,7 +6,7 @@
 ## Team
 
 |Name|E-Mail|Github|Role|
-|----|------|----|
+|----|------|----|----|
 |Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner||
 |Bernhard Rode|mail@bernhardrode.de|bernhardrode||
 |Carsten Mielenz|carsten.mielenz.france@gmail.com|||
