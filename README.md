@@ -1,18 +1,21 @@
 # CarND Capstone Project: System Integration
 
+
+![ros-graph](https://github.com/team-herbie/CarND-Capstone/blob/master/imgs/herbie.jpg)
+
 ## Team
 
-|Name|E-Mail|Role|
+|Name|E-Mail|Github|Role|
 |----|------|----|
-|Benjamin Söllner|benjamin.soellner@daimler.com||
-|Bernhard Rode|mail@bernhardrode.de||
-|Carsten Mielenz|carsten.mielenz.france@gmail.com||
-|Johannes Hallier|johannes.hallier@gmail.com||
-|Tianran Wang|tr.wang236@gmail.com||
+|Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner||
+|Bernhard Rode|mail@bernhardrode.de|bernhardrode||
+|Carsten Mielenz|carsten.mielenz.france@gmail.com|||
+|Johannes Hallier|johannes.hallier@gmail.com|jhallier||
+|Tianran Wang|tr.wang236@gmail.com|||
 
 ## System overview
 
-![ros-graph](https://github.com/bernhardrode/CarND-Capstone/blob/master/imgs/final-project-ros-graph-v2.png)
+![ros-graph](https://github.com/team-herbie/CarND-Capstone/blob/master/imgs/final-project-ros-graph-v2.png)
 ### Overview 
 
 There are 3 ROS modules modified: 
