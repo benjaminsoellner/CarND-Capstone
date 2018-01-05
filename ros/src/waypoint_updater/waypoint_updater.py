@@ -37,6 +37,7 @@ def calculate_distance_2d(point_a, point_b):
         (point_a[2] - point_b[2]) ** 2
     )
 
+
 def get_position(pose_stamped):
     """get position from pose"""
     return [
@@ -44,6 +45,7 @@ def get_position(pose_stamped):
         pose_stamped.pose.position.y,
         pose_stamped.pose.position.z
     ]
+
 
 def get_orientation(pose_stamped):
     """get orientation from pose"""
@@ -53,6 +55,7 @@ def get_orientation(pose_stamped):
         pose_stamped.orientation.z,
         pose_stamped.orientation.w
     ]
+
 
 def get_yaw(pose_stamped):
     """get orientation from pose_stamped"""
@@ -72,20 +75,35 @@ class WaypointUpdater(object):
         rospy.init_node('waypoint_updater')
 
         self.sub_current_pose = rospy.Subscriber(
-            '/current_pose', PoseStamped, self.pose_cb)
+            '/current_pose',
+            PoseStamped,
+            self.pose_cb
+        )
         self.sub_base_waypoints = rospy.Subscriber(
-            '/base_waypoints', Lane, self.waypoints_cb)
+            '/base_waypoints',
+            Lane,
+            self.waypoints_cb
+        )
 
         # Done: Add a subscriber for /traffic_waypoint and /obstacle_waypoint
         # below
         self.sub_traffic_waypoint = rospy.Subscriber(
-            '/traffic_waypoint', Int32, self.traffic_cb)
+            '/traffic_waypoint',
+            Int32,
+            self.traffic_cb
+        )
         self.sub_obstacle_waypoint = rospy.Subscriber(
-            '/obstacle_waypoint', Waypoint, self.obstacle_cb)
+            '/obstacle_waypoint',
+            Waypoint,
+            self.obstacle_cb
+        )
 
         # Create final_waypoints publisher
         self.final_waypoints_pub = rospy.Publisher(
-            'final_waypoints', Lane, queue_size=1)
+            'final_waypoints',
+            Lane,
+            queue_size=1
+        )
 
         # Member variables
         self.pose_stamped = PoseStamped()
@@ -102,7 +120,8 @@ class WaypointUpdater(object):
             if (self.pose_stamped is not None) and (self.base_waypoints is not None):
                 self.update_final_waypoints()
                 # self.publish_cte()
-                # self.update_velocity(self.final_waypoints) # <xg>: update the velocity
+                # self.update_velocity(self.final_waypoints) # <xg>: update the
+                # velocity
                 self.publish_final_waypoints()
 
                 if time.time() > self.logger_time + 1:
