@@ -11,7 +11,7 @@
 |Bernhard Rode|mail@bernhardrode.de|bernhardrode||
 |Carsten Mielenz|carsten.mielenz.france@gmail.com|carstenMIELENZ||
 |Johannes Hallier|johannes.hallier@gmail.com|jhallier||
-|Tianran Wang|tr.wang236@gmail.com|||
+|Tianran Wang|tr.wang236@gmail.com|trw236||
 
 ## System overview
 
