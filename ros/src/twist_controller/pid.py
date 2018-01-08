@@ -31,7 +31,7 @@ class PID(object):
 
         val = max(self.min, min(y, self.max))
 
-	rospy.loginfo('PID internal  y, val, cte = %f %f %f (%f %f) ',y,val, error,self.max,self.min)
+	# rospy.loginfo('PID internal  y, val, cte = %f %f %f (%f %f) ',y,val, error,self.max,self.min)
         if val > self.max:
             val = self.max
         elif val < self.min:
@@ -40,5 +40,5 @@ class PID(object):
             self.int_val = integral
         self.last_error = error
 
-	rospy.loginfo('PID internal  return val %f ',val)
+	# rospy.loginfo('PID internal  return val %f ',val)
         return val
