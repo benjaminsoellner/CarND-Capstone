@@ -124,8 +124,15 @@ class TLDetector(object):
             rospy.loginfo('first time: current_pos: %s; closest_wp: %s; closest_idx: %s', pose, minDist, self.minIdx)
             return self.minIdx
         else:
-            self.minIdx += 1
-            self.minIdx %= self.n_wps
+            nextIdx = self.minIdx + 1
+            nextIdx %= self.n_wps
+            dist1 = self.dist_3d(pose, self.waypoints.waypoints[self.minIdx])
+            dist2 = self.dist_3d(pose, self.waypoints.waypoints[nextIdx])
+            if dist2 < dist1:
+                self.minIdx = nextIdx
+            else:
+                # self.minIdx = self.minIdx
+                pass
             rospy.loginfo('current_pos: %s; closest_idx: %s', pose, self.minIdx)
             return self.minIdx
 
@@ -178,7 +185,7 @@ class TLDetector(object):
         if light:
             state = self.get_light_state(light)  # for test return only RED=0 tl state
             return light_wp, state
-        self.waypoints = None   # don't need base_wps by next itr
+        # self.waypoints = None   # don't need base_wps by next itr
         return -1, TrafficLight.UNKNOWN
 
 
