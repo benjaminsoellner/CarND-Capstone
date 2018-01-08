@@ -71,7 +71,7 @@ class WaypointUpdater(object):
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self):
-        rospy.loginfo('WaypointUpdater::__init__')
+        # rospy.loginfo('WaypointUpdater::__init__')
         rospy.init_node('waypoint_updater')
 
         self.sub_current_pose = rospy.Subscriber(
@@ -114,7 +114,7 @@ class WaypointUpdater(object):
         self.loop()
 
     def loop(self):
-        rospy.loginfo('WaypointUpdater::loop')
+        # rospy.loginfo('WaypointUpdater::loop')
         rate = rospy.Rate(REFRESH_RATE_IN_HZ)
         while not rospy.is_shutdown():
             if (self.pose_stamped is not None) and (self.base_waypoints is not None):
@@ -133,11 +133,11 @@ class WaypointUpdater(object):
         self.logger_time = time.time()
 
     def pose_cb(self, pose_stamped):
-        rospy.loginfo('WaypointUpdater::pose_cb %s', pose_stamped)
+        # rospy.loginfo('WaypointUpdater::pose_cb %s', pose_stamped)
         self.pose_stamped = pose_stamped
 
     def waypoints_cb(self, msg):
-        rospy.loginfo('WaypointUpdater::waypoints_cb %s', msg)
+        # rospy.loginfo('WaypointUpdater::waypoints_cb %s', msg)
         self.base_waypoints = msg.waypoints
         # Unsubscribe to save ressources ?!?
         # Somehting like self.sub_base_waypoints.unsubscribe()
@@ -145,12 +145,14 @@ class WaypointUpdater(object):
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. We will implement it
         # later
-        rospy.loginfo('WaypointUpdater::traffic_cb %s', msg)
+        # rospy.loginfo('WaypointUpdater::traffic_cb %s', msg)
+        pass
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it
         # later
-        rospy.loginfo('WaypointUpdater::obstacle_cb %s', msg)
+        # rospy.loginfo('WaypointUpdater::obstacle_cb %s', msg)
+        pass
 
     def get_waypoint_velocity(self, waypoint):
         return waypoint.twist.twist.linear.x
@@ -159,13 +161,13 @@ class WaypointUpdater(object):
         waypoints[waypoint].twist.twist.linear.x = velocity
 
     def norm_index(self, index):
-        rospy.loginfo('WaypointUpdater::norm_index')
+        # rospy.loginfo('WaypointUpdater::norm_index')
         wp_count = len(self.base_waypoints)
         index = abs(index % wp_count)
         return index
 
     def next_waypoint(self, position, theta):
-        rospy.loginfo('WaypointUpdater::next_waypoint')
+        # rospy.loginfo('WaypointUpdater::next_waypoint')
         index = self.closest_waypoint(position)
         map_coords = get_position(self.base_waypoints[index].pose)
 
@@ -181,7 +183,7 @@ class WaypointUpdater(object):
         return index
 
     def closest_waypoint(self, position):
-        rospy.loginfo('WaypointUpdater::closest_waypoint')
+        # rospy.loginfo('WaypointUpdater::closest_waypoint')
         closest_len = 10000
         closest_index = 0
         for i in range(len(self.base_waypoints)):
@@ -196,7 +198,7 @@ class WaypointUpdater(object):
         return closest_index
 
     def update_final_waypoints(self):
-        rospy.loginfo('WaypointUpdater::update_final_waypoints')
+        # rospy.loginfo('WaypointUpdater::update_final_waypoints')
         theta = get_yaw(self.pose_stamped)
         index = self.next_waypoint(get_position(self.pose_stamped), theta)
 
@@ -209,7 +211,7 @@ class WaypointUpdater(object):
         self.final_waypoints = final_waypoints
 
     def publish_final_waypoints(self):
-        rospy.loginfo('WaypointUpdater::publish_final_waypoints')
+        # rospy.loginfo('WaypointUpdater::publish_final_waypoints')
         lane = Lane()
         lane.header.stamp = rospy.Time(0)
         lane.waypoints = self.final_waypoints
