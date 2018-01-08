@@ -58,6 +58,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        self.n_wps = None  # the amount of all the waypoints
 
         rospy.spin()
 
@@ -111,7 +112,7 @@ class TLDetector(object):
 
         """
         # pose -> point and quaternion, waypoints.waypoints[i].pose.pose is the same as the argument pose
-        if self.waypoints is not None:  # search for the wp at the first time
+        if self.n_wps is None:  # search for the wp at the first time
             self.n_wps = len(self.waypoints.waypoints)
 
             minDist = 1.0e10
@@ -126,8 +127,8 @@ class TLDetector(object):
         else:
             nextIdx = self.minIdx + 1
             nextIdx %= self.n_wps
-            dist1 = self.dist_3d(pose, self.waypoints.waypoints[self.minIdx])
-            dist2 = self.dist_3d(pose, self.waypoints.waypoints[nextIdx])
+            dist1 = self.dist_3d(pose, self.waypoints.waypoints[self.minIdx].pose.pose)
+            dist2 = self.dist_3d(pose, self.waypoints.waypoints[nextIdx].pose.pose)
             if dist2 < dist1:
                 self.minIdx = nextIdx
             else:
