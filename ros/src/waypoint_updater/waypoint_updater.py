@@ -134,7 +134,7 @@ class WaypointUpdater(object):
 
     def pose_cb(self, pose_stamped):
         # rospy.loginfo('WaypointUpdater::pose_cb %s', pose_stamped)
-        self.pose_stamped = pose_stamped
+        self.pose_stamped = pose_stamped  # current pos
 
     def waypoints_cb(self, msg):
         # rospy.loginfo('WaypointUpdater::waypoints_cb %s', msg)
@@ -166,7 +166,7 @@ class WaypointUpdater(object):
         index = abs(index % wp_count)
         return index
 
-    def next_waypoint(self, position, theta):
+    def next_waypoint(self, position, theta):  # theta is yaw
         # rospy.loginfo('WaypointUpdater::next_waypoint')
         index = self.closest_waypoint(position)
         map_coords = get_position(self.base_waypoints[index].pose)
