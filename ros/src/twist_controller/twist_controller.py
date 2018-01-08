@@ -1,80 +1,84 @@
-import rospy
-from pid import PID
-from yaw_controller import YawController
-from lowpass import LowPassFilter
 
 GAS_DENSITY = 2.858
 ONE_MPH = 0.44704
 
+import rospy
+#
+# CAM update jan-02-18
+#
+
+from pid import PID
+from yaw_controller import YawController
+
 
 class Controller(object):
 
-    def __init__(self, *args, **kwargs):
-        rospy.logdebug("Controller::__init__")
+    def __init__(self, time_step, vehcile_mass, accel_limit,
+                 decel_limit, wheel_radius, wheel_base, steer_ratio,
+                 min_speed, max_lat_accel, max_steer_angle):
 
-        # Done: Implement
-        self.vehicle_mass = args[0]
-        self.fuel_capacity = args[1]
-        self.brake_deadband = args[2]
-        self.decel_limit = args[3]
-        self.accel_limit = args[4]
-        self.wheel_radius = args[5]
-        self.wheel_base = args[6]
-        self.steer_ratio = args[7]
-        self.max_lat_accel = args[8]
-        self.max_steer_angle = args[9]
+        self.time_step = time_step
+        self.vehcile_mass = vehcile_mass
+        self.accel_limit = accel_limit
+        self.decel_limit = decel_limit
+        self.wheel_radius = wheel_radius
+        self.wheel_base = wheel_base
+        self.steer_ratio = steer_ratio
+        self.min_speed = min_speed
+        self.max_lat_accel = max_lat_accel
+        self.max_steer_angle = max_steer_angle
 
-        self.pid_throttle = PID(
-            1.5,
-            0.001,
-            0.0,
-            self.decel_limit,
-            self.accel_limit
-        )
+        #
+        # setup PID and YAW controller
+        # + Note: PID values K, Kd, Ki are draft - to be tuned
+        # + Note: YAW values min_speed(set by DBW_node) is draft - to be tuned
+        #
 
-        self.yaw_controller = YawController(
-            self.wheel_base,
-            self.steer_ratio,
-            0.0,
-            self.max_lat_accel,
-            self.max_steer_angle
-        )
+        self.pid = PID(3, 0.3, 0.6, decel_limit, accel_limit)
+        self.yaw = YawController(
+            wheel_base, steer_ratio, min_speed, max_lat_accel, max_steer_angle)
 
-        self.lp_filter = LowPassFilter(4., 1.)
-
-    def control(self, *args, **kwargs):
-        rospy.logdebug("Controller::control")
-
-        # Done: Change the arg, kwarg list to suit your needs
+    def control(self, velocity, yaw_, current_velocity, dbw_on):
+        # TODO: Change the arg, kwarg list to suit your needs
         # Return throttle, brake, steer
-        proposed_linear_velocity = args[0]
-        proposed_angular_velocity = args[1]
-        current_linear_velocity = args[2]
-        dt = 0.02
 
-        velocity_error = proposed_linear_velocity - current_linear_velocity
-        accel = self.pid_throttle.step(velocity_error, dt)
-        accel = self.lp_filter.filt(accel)
+        #
+        # DBW enabled
 
-        steer = self.yaw_controller.get_steering(
-            proposed_linear_velocity,
-            proposed_angular_velocity,
-            current_linear_velocity
-        )
+        if dbw_on:
 
-        if accel > 0.0:
-            throttle = accel
-            brake = 0.0
+            #
+            # throttle calcultion by PID
+            # + note: PID considers break and acceleration limits
+            #
+
+            cte = velocity - current_velocity
+            throttle = self.pid.step(cte, self.time_step)
+
+            #
+            # brake assignment
+            #
+
+            if throttle < 0:
+                brake = -1.0 * self.vehcile_mass * self.wheel_radius * throttle
+                throttle = 0.0
+            else:
+                brake = 0.0
+
+            #
+            # steering calculation by YAW controller
+            # + note: YAW considers steering limits
+            #
+
+            steer = self.yaw.get_steering(velocity, yaw_, current_velocity)
+
+        #
+        # DBW disabled
+
         else:
-            throttle = 0.0
-            decel = -accel
-            if decel < self.brake_deadband:
-                decel = 0.0
-
-            mass = self.vehicle_mass + self.fuel_capacity * GAS_DENSITY
-            brake = decel * mass * self.wheel_radius
+            self.pid.reset()
+            throttle = 0.
+            brake = 0.
+            steer = 0.
 
         return throttle, brake, steer
-
-    def reset(self):
-        self.pid_throttle.reset()
