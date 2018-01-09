@@ -4,7 +4,9 @@ MAX_NUM = float('inf')
 import rospy
 
 
+# author: udacity, carstenMIELENZ
 class PID(object):
+
 
     def __init__(self, kp, ki, kd, mn=MIN_NUM, mx=MAX_NUM):
         self.kp = kp
@@ -15,9 +17,11 @@ class PID(object):
 
         self.int_val = self.last_int_val = self.last_error = 0.
 
+
     def reset(self):
         self.int_val = 0.0
         self.last_int_val = 0.0
+
 
     def step(self, error, sample_time):
         self.last_int_val = self.int_val
@@ -27,11 +31,11 @@ class PID(object):
 
         y = self.kp * error + self.ki * self.int_val + self.kd * derivative
 
-
-
         val = max(self.min, min(y, self.max))
 
-	# rospy.loginfo('PID internal  y, val, cte = %f %f %f (%f %f) ',y,val, error,self.max,self.min)
+        rospy.logdebug('PID::step y, val, cte (max, min) = %f,  %f,  %f (%f, %f) ',
+                        y, val, error, self.max, self.min)
+
         if val > self.max:
             val = self.max
         elif val < self.min:
@@ -40,5 +44,5 @@ class PID(object):
             self.int_val = integral
         self.last_error = error
 
-	# rospy.loginfo('PID internal  return val %f ',val)
+        rospy.logdebug('PID::step return %f ',val)
         return val
