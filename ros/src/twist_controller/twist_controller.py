@@ -11,7 +11,9 @@ from pid import PID
 from yaw_controller import YawController
 
 
+# author: udacity, bernhardrode, carstenMIELENZ
 class Controller(object):
+
 
     def __init__(self, time_step, vehcile_mass, accel_limit,
                  decel_limit, wheel_radius, wheel_base, steer_ratio,
@@ -28,11 +30,9 @@ class Controller(object):
         self.max_lat_accel = max_lat_accel
         self.max_steer_angle = max_steer_angle
 
-        #
         # setup PID and YAW controller
-        # + Note: PID values K, Kd, Ki are draft - to be tuned
-        # + Note: YAW values min_speed(set by DBW_node) is draft - to be tuned
-        #
+        # TODO Note: PID values K, Kd, Ki are draft - to be tuned
+        # TODO Note: YAW values min_speed(set by DBW_node) is draft - to be tuned
 
         self.pid = PID(3, 0.3, 0.6, decel_limit, accel_limit)
         self.yaw = YawController(
@@ -42,39 +42,26 @@ class Controller(object):
         # TODO: Change the arg, kwarg list to suit your needs
         # Return throttle, brake, steer
 
-        #
-        # DBW enabled
-
+        # DBW is enabled -> update P/I/D values
         if dbw_on:
 
-            #
             # throttle calcultion by PID
-            # + note: PID considers break and acceleration limits
-            #
-
+            # Note: PID considers break and acceleration limits
             cte = velocity - current_velocity
             throttle = self.pid.step(cte, self.time_step)
 
-            #
-            # brake assignment
-            #
-
+            # Brake assignment
             if throttle < 0:
                 brake = -1.0 * self.vehcile_mass * self.wheel_radius * throttle
                 throttle = 0.0
             else:
                 brake = 0.0
 
-            #
-            # steering calculation by YAW controller
-            # + note: YAW considers steering limits
-            #
-
+            # Steering calculation by YAW controller
+            # Note: YAW considers steering limits
             steer = self.yaw.get_steering(velocity, yaw_, current_velocity)
 
-        #
         # DBW disabled
-
         else:
             self.pid.reset()
             throttle = 0.
