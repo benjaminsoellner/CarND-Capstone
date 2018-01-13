@@ -11,3 +11,5 @@ traffic_light_bag_files
 
 .idea
 mynotes
+
+ide_profiles/tensorflow-from-src/tensorflow-src
