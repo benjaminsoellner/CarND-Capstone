@@ -7,6 +7,7 @@ DETECTION_LIMIT = 0.5
 
 class TLClassifier(object):
     def __init__(self):
+        """
         rospy.logdebug("TLClassifier::__init__ started.")
 
         # Location of pre-trained inference model
@@ -29,6 +30,7 @@ class TLClassifier(object):
             self.num_d = self.inference_graph.get_tensor_by_name('num_detections:0')
         
         self.sess = tf.Session(graph = self.inference_graph)
+        """
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image

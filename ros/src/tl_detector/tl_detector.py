@@ -21,7 +21,7 @@ MAX_TL_DIST = 200 # TODO fine-tune
 
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
-BYPASS_TL_CLASSIFIER = False
+BYPASS_TL_CLASSIFIER = True
 
 
 def dist(point1, point2):
