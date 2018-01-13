@@ -1,0 +1,52 @@
+item {
+  id: 1
+  display_name: "Red"
+}
+item {
+  id: 2
+  display_name: "RedLeft"
+}
+item {
+  id: 3
+  display_name: "RedRight"
+}
+item {
+  id: 4
+  display_name: "RedStraight"
+}
+item {
+  id: 5
+  display_name: "RedStraightLeft"
+}
+item {
+  id: 6
+  display_name: "Yellow"
+}
+item {
+  id: 7
+  display_name: "Green"
+}
+item {
+  id: 8
+  display_name: "GreenLeft"
+}
+item {
+  id: 9
+  display_name: "GreenStraight"
+}
+item {
+  id: 10
+  display_name: "GreenStraightLeft"
+}
+item {
+  id: 11
+  display_name: "GreenStraightRight"
+}
+item {
+  id: 12
+  display_name: "GreenRight"
+}
+item {
+  id: 13
+  display_name: "off"
+}
