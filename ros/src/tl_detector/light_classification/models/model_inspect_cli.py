@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 """
 Command line tool to inspect tensors in a tensorflow model file (*.pb) and to
 run one image through the model (assuming hardcoded tensor names).
 
 Usage:
-python tl_model_inspect_cli.py ops <model.pb>
+python model_inspect_cli.py ops <model.pb>
   to inspect the model for operations
-python tl_model_inspect_cli.py test <model.pb> <image>
+python model_inspect_cli.py test <model.pb> <image>
   to test model on image
 """
 
