@@ -23,6 +23,9 @@ MAX_TL_DIST = 200 # TODO fine-tune
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
 
+# Use this constant (!= 1) to throttle the classifier in case of performance issues
+CLASSIFY_EVERY_NTH_FRAME = 10
+
 
 def dist(point1, point2):
     """Helper function to calculate the eucledian distance between two points.
@@ -133,6 +136,7 @@ class TLDetector(object):
         self.light_ahead = None # traffic light index ahead of current pose
 
         # higher level state
+        self.classification_age = 0 # used to count the number of frames since last classification
         self.state = TrafficLight.UNKNOWN
         self.uncertain_state = TrafficLight.UNKNOWN # uncertain state, kept until occured a couple of times
         self.state_count = 0 # counter to derive certain from uncertain state
@@ -152,7 +156,7 @@ class TLDetector(object):
         '''
         rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
         rospy.Subscriber('/image_color', Image, self.cb_image_color)
-        
+
         rospy.spin()
 
 
@@ -205,18 +209,25 @@ class TLDetector(object):
         self.camera_image = msg
         # check that we are not bypassing the classifier
         if not BYPASS_TL_CLASSIFIER:
-            new_state = self.get_state_from_camera()
-            # with camera, new state has to occur at least a number of times ...
-            if self.state != new_state:
-                self.state_count = -1
-                self.uncertain_state = new_state
-            elif self.state_count == STATE_COUNT_THRESHOLD:
-                # ... before it is set
-                self.state = self.uncertain_state
-                rospy.logdebug("TLDetector::cb_image_color is now sure that traffic light #%s has state: %s",
-                        self.light_ahead, self.state)
-            if self.state_count < STATE_COUNT_THRESHOLD+1:
-                self.state_count += 1
+            if CLASSIFY_EVERY_NTH_FRAME == self.classification_age+1:
+                self.classification_age = 0
+                new_state = self.get_state_from_camera()
+                # with camera, new state has to occur at least a number of times ...
+                rospy.logdebug("TLDetector::cb_image_color classified traffic light #%s with state: %s",
+                        self.light_ahead, self.uncertain_state)
+                if self.state != new_state:
+                    self.state_count = -1
+                    self.uncertain_state = new_state
+                elif self.state_count == STATE_COUNT_THRESHOLD:
+                    # ... before it is set
+                    self.state = self.uncertain_state
+                    rospy.logdebug("TLDetector::cb_image_color is now sure that traffic light #%s has state: %s",
+                            self.light_ahead, self.state)
+                if self.state_count < STATE_COUNT_THRESHOLD+1:
+                    self.state_count += 1
+            else:
+                self.classification_age += 1
+                rospy.logdebug("TLDetector::cb_image_color skipping image (%s)", self.classification_age)
         else:
             # bypass classifier if we use simulator data
             new_state = self.get_state_from_simulator()

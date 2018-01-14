@@ -10,7 +10,7 @@ TF_SRC_DIR="/home/student/tensorflow-src/tensorflow"
 TF_MODEL_ORIGINAL="$SCRIPTPATH/../model/frozen_inference_graph.pb"
 TF_MODEL_OPTIMIZED="$SCRIPTPATH/../model/frozen_inference_graph_opt.pb"
 TF_MODEL_TENSOR_IN="image_tensor"
-TF_MODEL_TENSOR_OUT="detection_classes,detection_scores,detection_boxes"
+TF_MODEL_TENSOR_OUT="detection_boxes,detection_scores,detection_classes,num_detections"
 
 cd $TF_SRC_DIR
 
