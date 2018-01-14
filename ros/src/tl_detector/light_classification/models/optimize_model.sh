@@ -7,10 +7,10 @@
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 TF_SRC_DIR="/home/student/tensorflow-src/tensorflow"
-TF_MODEL_ORIGINAL="$SCRIPTPATH/model/frozen_inference_graph.pb"
-TF_MODEL_OPTIMIZED="$SCRIPTPATH/model/frozen_inference_graph_opt.pb"
+TF_MODEL_ORIGINAL="$SCRIPTPATH/../model/frozen_inference_graph.pb"
+TF_MODEL_OPTIMIZED="$SCRIPTPATH/../model/frozen_inference_graph_opt.pb"
 TF_MODEL_TENSOR_IN="image_tensor"
-TF_MODEL_TENSOR_OUT="detection_classes,detection_scores"
+TF_MODEL_TENSOR_OUT="detection_classes,detection_scores,detection_boxes"
 
 cd $TF_SRC_DIR
 
@@ -27,5 +27,6 @@ bazel-bin/tensorflow/tools/graph_transforms/transform_graph \
   fold_batch_norms
   fold_old_batch_norms
   fuse_resize_and_conv
+  quantize_weights
   strip_unused_nodes
   sort_by_execution_order'

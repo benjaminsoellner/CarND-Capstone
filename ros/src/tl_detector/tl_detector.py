@@ -21,7 +21,7 @@ MAX_TL_DIST = 100  # TODO fine-tune
 
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
-BYPASS_TL_CLASSIFIER = True
+BYPASS_TL_CLASSIFIER = False
 
 
 def dist(point1, point2):
@@ -110,21 +110,6 @@ class TLDetector(object):
 
 
     def __init__(self):
-        rospy.init_node('tl_detector', log_level=rospy.DEBUG)
-        rospy.logdebug("TLDetector::__init__ started.")
-
-        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
-        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
-
-        '''
-        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
-        helps you acquire an accurate ground truth data source for the traffic light
-        classifier by sending the current color state of all traffic lights in the
-        simulator. When testing on the vehicle, the color state will not be available. You'll need to
-        rely on the position of the light and the camera image to predict it.
-        '''
-        rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
-        rospy.Subscriber('/image_color', Image, self.cb_image_color)
 
         # configuration
         # stored camera_info: w, h = 800, 600 and 8 points as a list
@@ -153,6 +138,21 @@ class TLDetector(object):
         self.state_count = 0 # counter to derive certain from uncertain state
         self.target_waypoint = None # closest waypoint to traffic light
 
+        rospy.init_node('tl_detector', log_level=rospy.DEBUG)
+
+        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
+        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
+
+        '''
+        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
+        helps you acquire an accurate ground truth data source for the traffic light
+        classifier by sending the current color state of all traffic lights in the
+        simulator. When testing on the vehicle, the color state will not be available. You'll need to
+        rely on the position of the light and the camera image to predict it.
+        '''
+        rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
+        rospy.Subscriber('/image_color', Image, self.cb_image_color)
+        
         rospy.spin()
 
 
