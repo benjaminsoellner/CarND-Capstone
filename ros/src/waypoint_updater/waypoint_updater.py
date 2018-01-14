@@ -27,9 +27,9 @@ as well as to verify your TL classifier.
 '''
 
 # TODO fine-tune lookahead WPS and waypoint refresh rate for performance
-LOOKAHEAD_WPS = 200  # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 100  # Number of waypoints we will publish. You can change this number
 REFRESH_RATE_IN_HZ = 10
-DECREASE_VEL = 0.2
+DECREASE_VEL = 0.15
 
 
 def calculate_distance_2d(point_a, point_b):
@@ -223,26 +223,30 @@ class WaypointUpdater(object):
         self.final_waypoints = final_waypoints
 
     def update_velocity(self):
-        self.publish_dbw_enabled(True)
-        #if self.idx_stop != -1:
-        idx_stop_in_final = self.idx_stop - self.index
-        #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
-        if idx_stop_in_final >= LOOKAHEAD_WPS:
-            return
-        elif idx_stop_in_final < 0:
-            return
-        elif -2 < idx_stop_in_final <= 0:  # todo
-            if self.idx_stop != -1:
-                self.publish_dbw_enabled(False)
-            else:
+        if self.idx_stop != -1:  # traffic light is yellow or red
+            idx_stop_in_final = self.idx_stop - self.index
+            #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
+            if idx_stop_in_final >= LOOKAHEAD_WPS:  # out of range
+                self.publish_dbw_enabled(True)
                 return
-        else:
-            for i in range(idx_stop_in_final, -1, -1):
-                tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
-                if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
-                    self.set_waypoint_velocity(self.final_waypoints, i, tmp_vel)
-            del self.final_waypoints[idx_stop_in_final + 1:-1]
-            del self.final_waypoints[-1]
+            elif idx_stop_in_final < -1:  # passed the traffic light
+                self.publish_dbw_enabled(True)
+                return
+            elif -2 < idx_stop_in_final <= 0:  # right at the stop line
+                self.publish_dbw_enabled(False)
+                return
+
+            else:
+                self.publish_dbw_enabled(True)  # is near the stop line
+                for i in range(idx_stop_in_final, -1, -1):
+                    tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
+                    if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
+                        self.set_waypoint_velocity(self.final_waypoints, i, tmp_vel)
+                del self.final_waypoints[idx_stop_in_final + 1:-1]
+                del self.final_waypoints[-1]
+        else:  # traffic light is green
+            self.publish_dbw_enabled(True)
+            return
 
 
     def publish_final_waypoints(self):

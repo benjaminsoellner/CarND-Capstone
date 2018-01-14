@@ -13,3 +13,4 @@ traffic_light_bag_files
 mynotes
 
 ide_profiles/tensorflow-from-src/tensorflow-src
+ros/src/tl_detector/light_classification/model
