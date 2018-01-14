@@ -30,6 +30,7 @@ as well as to verify your TL classifier.
 LOOKAHEAD_WPS = 100  # Number of waypoints we will publish. You can change this number
 REFRESH_RATE_IN_HZ = 10
 DECREASE_VEL = 0.15
+STATE_ACC, STATE_DEC, STATE_STOP = 0, 1, 2  # vehicle state (Acceleration can also mean: keep max. velocity)
 
 
 def calculate_distance_2d(point_a, point_b):
@@ -100,11 +101,10 @@ class WaypointUpdater(object):
 
         self.idx_stop = -1
         self.dbw_enabled = True
+        self.current_vehicle_state = STATE_ACC
 
         self.update_logger_time()
         self.loop()
-
-
 
     def loop(self):
         rospy.logdebug('WaypointUpdater::loop (enter)')
@@ -113,14 +113,13 @@ class WaypointUpdater(object):
             if (self.pose_stamped is not None) and (self.base_waypoints is not None):
                 self.update_final_waypoints()
                 # self.publish_cte()
-                self.update_velocity()  # <xg>: update the velocity
+                self.update_velocity()  # update the velocity
                 self.publish_final_waypoints()
 
                 if time.time() > self.logger_time + 1:
                     self.update_logger_time()
             rate.sleep()
         rospy.spin()
-
 
     def update_logger_time(self):
         self.logger_time = time.time()
@@ -227,26 +226,45 @@ class WaypointUpdater(object):
             idx_stop_in_final = self.idx_stop - self.index
             #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
             if idx_stop_in_final >= LOOKAHEAD_WPS:  # out of range
-                self.publish_dbw_enabled(True)
-                return
-            elif idx_stop_in_final < -1:  # passed the traffic light
-                self.publish_dbw_enabled(True)
-                return
+                self.accelerate_vehicle()
+            elif idx_stop_in_final < -1:  # passed the stop line
+                self.accelerate_vehicle()
             elif -2 < idx_stop_in_final <= 0:  # right at the stop line
-                self.publish_dbw_enabled(False)
-                return
-
-            else:
-                self.publish_dbw_enabled(True)  # is near the stop line
-                for i in range(idx_stop_in_final, -1, -1):
-                    tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
-                    if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
-                        self.set_waypoint_velocity(self.final_waypoints, i, tmp_vel)
-                del self.final_waypoints[idx_stop_in_final + 1:-1]
-                del self.final_waypoints[-1]
+                self.stop_vehicle()
+            else:  # is near (before) the stop line
+                self.decelerate_vehicle(idx_stop_in_final)
         else:  # traffic light is green
-            self.publish_dbw_enabled(True)
-            return
+            self.accelerate_vehicle()
+
+    def accelerate_vehicle(self):
+        self.publish_dbw_enabled(True)
+        self.log_vehicle_state(STATE_ACC)
+
+    def stop_vehicle(self):
+        self.publish_dbw_enabled(False)
+        self.log_vehicle_state(STATE_STOP)
+
+    def decelerate_vehicle(self, idx_stop_in_final):
+        self.log_vehicle_state(STATE_DEC)
+        self.publish_dbw_enabled(True)
+        for i in range(idx_stop_in_final, -1, -1):
+            tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
+            if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
+                self.set_waypoint_velocity(self.final_waypoints, i, tmp_vel)
+        del self.final_waypoints[idx_stop_in_final + 1:-1]
+        del self.final_waypoints[-1]
+
+    def log_vehicle_state(self, new_state):
+        if self.current_vehicle_state != new_state:
+            self.current_vehicle_state = new_state
+            if self.current_vehicle_state == STATE_ACC:
+                rospy.logdebug("vehicle state: ACCELERATION")
+            elif self.current_vehicle_state == STATE_DEC:
+                rospy.logdebug("vehicle state: DECELERATION")
+            elif self.current_vehicle_state == STATE_STOP:
+                rospy.logdebug("vehicle state: STOP")
+            else:
+                rospy.logdebug("vehicle state: UNKNOWN")
 
 
     def publish_final_waypoints(self):

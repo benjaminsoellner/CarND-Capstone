@@ -18,7 +18,6 @@ STATE_COUNT_THRESHOLD = 3  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
 MAX_TL_DIST = 100  # TODO fine-tune
-
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = True
@@ -126,19 +125,13 @@ class TLDetector(object):
         rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
         rospy.Subscriber('/image_color', Image, self.cb_image_color)
 
+        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+
         # configuration
         # stored camera_info: w, h = 800, 600 and 8 points as a list
         self.config = yaml.load(rospy.get_param("/traffic_light_config"))
         # self.cfg_camera_info = self.config['camera_info'] # TODO not needed?
         self.cfg_stop_line_positions = self.config['stop_line_positions']
-
-        self.upcoming_red_light_pub = rospy.Publisher(
-            '/traffic_waypoint', Int32, queue_size=1)
-
-        # used for classification
-        self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
-        self.listener = tf.TransformListener() # TODO needed?
 
         # telemetry
         self.pose = None # current pose
@@ -149,9 +142,14 @@ class TLDetector(object):
 
         # higher level state
         self.state = TrafficLight.UNKNOWN
-        self.uncertain_state = TrafficLight.UNKNOWN # uncertain state, kept until occured a couple of times
-        self.state_count = 0 # counter to derive certain from uncertain state
-        self.target_waypoint = None # closest waypoint to traffic light
+        self.uncertain_state = TrafficLight.UNKNOWN  # uncertain state, kept until occured a couple of times
+        self.state_count = 0  # counter to derive certain from uncertain state
+        self.target_waypoint = None  # closest waypoint to traffic light
+
+        # used for classification
+        self.bridge = CvBridge()
+        self.light_classifier = TLClassifier()
+        self.listener = tf.TransformListener()  # TODO needed?
 
         rospy.spin()
 
