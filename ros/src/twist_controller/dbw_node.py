@@ -141,9 +141,9 @@ class DBWNode(object):
 
             # Publish throttle, break, steer values
             if self.dbw:
-                self.publish(throttle,brake,steer)
+                self.publish(throttle, brake, steer)
             else:
-                self.publish(0, 1000, 0)
+                self.publish(0, 10000, 0)
 
             rate.sleep()
 
