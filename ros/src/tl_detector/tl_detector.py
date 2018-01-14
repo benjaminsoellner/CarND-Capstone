@@ -21,7 +21,7 @@ MAX_TL_DIST = 200 # TODO fine-tune
 
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
-BYPASS_TL_CLASSIFIER = False
+BYPASS_TL_CLASSIFIER = True
 
 
 def dist(point1, point2):
@@ -39,7 +39,7 @@ def dist(point1, point2):
         y1 = point1.y
     if type(point2) is list:
         x2 = point2[0]
-        y2 = point2[0]
+        y2 = point2[1]
     else:
         x2 = point2.x
         y2 = point2.y
@@ -98,8 +98,9 @@ def find_point_ahead_of_pose(list_of_points, pose):
             closest_y = closest_point.y
         # check that closest waypoint is really ahead of me
         angle = math.atan2(closest_y-other_point.y, closest_x-other_point.x)
+        diff_angle = math.fabs(angle-theta)
         # if not, the next surely will be (% takes care of rotating list)
-        if angle > math.pi / 4:
+        if diff_angle > math.pi / 4:
             closest_point_index = (closest_point_index+1) % len(list_of_points)
     return closest_point_index
 
@@ -274,7 +275,7 @@ class TLDetector(object):
 
     def publish_traffic_waypoint(self):
         # do we have all telemetry? is there a red light?
-        if self.target_waypoint is not None and self.state == TrafficLight.RED:
+        if self.target_waypoint is not None and (self.state == TrafficLight.RED or self.state == TrafficLight.YELLOW):
             # then publish its waypoint downstream to stop the car
             self.upcoming_red_light_pub.publish(Int32(self.target_waypoint))
         else:
