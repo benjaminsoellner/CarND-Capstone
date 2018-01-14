@@ -10,6 +10,7 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Point
 from styx_msgs.msg import Lane, Waypoint
 from std_msgs.msg import Int32
+from std_msgs.msg import Bool
 
 
 '''
@@ -28,6 +29,7 @@ as well as to verify your TL classifier.
 # TODO fine-tune lookahead WPS and waypoint refresh rate for performance
 LOOKAHEAD_WPS = 200  # Number of waypoints we will publish. You can change this number
 REFRESH_RATE_IN_HZ = 10
+DECREASE_VEL = 0.2
 
 
 def calculate_distance_2d(point_a, point_b):
@@ -75,7 +77,7 @@ class WaypointUpdater(object):
 
     def __init__(self):
         rospy.logdebug('WaypointUpdater::__init__ (enter)')
-        rospy.init_node('waypoint_updater')
+        rospy.init_node('waypoint_updater', log_level=rospy.DEBUG)
 
         rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
         self.sub_base_waypoints = rospy.Subscriber('/base_waypoints',
@@ -89,14 +91,19 @@ class WaypointUpdater(object):
         # Create /final_waypoints publisher
         self.pub_final_waypoints = rospy.Publisher('final_waypoints',
                                             Lane, queue_size=1)
+        self.pub_dbw_enabled = rospy.Publisher('vehicle/dbw_enabled', Bool, queue_size=1)
 
         # Member variables
         self.pose_stamped = PoseStamped()
         self.base_waypoints = None
         self.final_waypoints = []
 
+        self.idx_stop = -1
+        self.dbw_enabled = True
+
         self.update_logger_time()
         self.loop()
+
 
 
     def loop(self):
@@ -106,8 +113,7 @@ class WaypointUpdater(object):
             if (self.pose_stamped is not None) and (self.base_waypoints is not None):
                 self.update_final_waypoints()
                 # self.publish_cte()
-                # self.update_velocity(self.final_waypoints) # <xg>: update the
-                # velocity
+                self.update_velocity()  # <xg>: update the velocity
                 self.publish_final_waypoints()
 
                 if time.time() > self.logger_time + 1:
@@ -122,26 +128,27 @@ class WaypointUpdater(object):
 
     def cb_current_pose(self, pose_stamped):
         """callback for receiving PoseStamped message on /current_pose topic"""
-        rospy.logdebug('WaypointUpdater::pose_cb %s', pose_stamped)
+        #rospy.logdebug('WaypointUpdater::pose_cb %s', pose_stamped)
         self.pose_stamped = pose_stamped  # current pos
 
 
     def cb_base_waypoints(self, msg):
         """callback for receiving Lane message on /base_waypoints topic"""
-        rospy.logdebug('WaypointUpdater::waypoints_cb %s', msg)
+        #rospy.logdebug('WaypointUpdater::waypoints_cb %s', msg)
         self.base_waypoints = msg.waypoints
         # TODO: Unsubscribe to save ressources ?!? - Somehting like self.sub_base_waypoints.unsubscribe()
 
 
     def cb_traffic_waypoint(self, msg):
         """callback for receiving Int32 message on /traffic_waypoint topic."""
-        rospy.logdebug('WaypointUpdater::traffic_cb %s', msg)
+        #rospy.logdebug('WaypointUpdater::traffic_cb %s', msg)
+        self.idx_stop = int(msg.data)
         # TODO: implement traffic_cb(...) after traffic light detection is implemented
 
 
     def cb_obstacle_waypoint(self, msg):
         """callback for receiving Waypoint message on /obstacle_waypoint topic."""
-        rospy.logdebug('WaypointUpdater::obstacle_cb %s', msg)
+        #rospy.logdebug('WaypointUpdater::obstacle_cb %s', msg)
         # TODO: implement obstacle_cb(...) after traffic light detection is implemented
 
 
@@ -155,7 +162,7 @@ class WaypointUpdater(object):
 
     def norm_index(self, index):
         """if index is greater than the length of the waypoint list, wraps it around with modulo operation"""
-        rospy.logdebug('WaypointUpdater::norm_index')
+        #rospy.logdebug('WaypointUpdater::norm_index')
         wp_count = len(self.base_waypoints)
         index = abs(index % wp_count)
         return index
@@ -163,10 +170,10 @@ class WaypointUpdater(object):
 
     def next_waypoint(self, position, theta):  # theta is yaw
         """finds index of next waypoint ahead of position looking at steering angle theta"""
-        rospy.logdebug('WaypointUpdater::next_waypoint')
+        #rospy.logdebug('WaypointUpdater::next_waypoint')
         # find closest waypoint first
-        index = self.closest_waypoint(position)
-        map_coords = get_position(self.base_waypoints[index].pose)
+        self.index = self.closest_waypoint(position)
+        map_coords = get_position(self.base_waypoints[self.index].pose)
         # get coordination of closest waypoints
         map_x = map_coords[0]
         map_y = map_coords[1]
@@ -175,14 +182,14 @@ class WaypointUpdater(object):
         angle = math.fabs(theta - heading)
         # if not, the next surely will be
         if angle > math.pi / 4:
-            index += 1
+            self.index += 1
         # if waypoint index exceeds length of list, wrap around to the start of list
-        index = self.norm_index(index)
-        return index
+        self.index = self.norm_index(self.index)
+        return self.index
 
 
     def closest_waypoint(self, position):
-        rospy.logdebug('WaypointUpdater::closest_waypoint (enter)')
+        #rospy.logdebug('WaypointUpdater::closest_waypoint (enter)')
         closest_len = 10000
         closest_index = 0
         # iterate through all waypoints ...
@@ -200,7 +207,7 @@ class WaypointUpdater(object):
 
     def update_final_waypoints(self):
         """update the list of waypoints to conclude only the LOOKAHEAD_WPS number of waypoints"""
-        rospy.logdebug('WaypointUpdater::update_final_waypoints (enter)')
+        #rospy.logdebug('WaypointUpdater::update_final_waypoints (enter)')
         theta = get_yaw(self.pose_stamped)
         next_wp_index = self.next_waypoint(get_position(self.pose_stamped), theta)
         # start with an empty list to publish
@@ -215,13 +222,43 @@ class WaypointUpdater(object):
             final_waypoints.append(waypoint)
         self.final_waypoints = final_waypoints
 
+    def update_velocity(self):
+        self.publish_dbw_enabled(True)
+        #if self.idx_stop != -1:
+        idx_stop_in_final = self.idx_stop - self.index
+        #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
+        if idx_stop_in_final >= LOOKAHEAD_WPS:
+            return
+        elif idx_stop_in_final < 0:
+            return
+        elif -2 < idx_stop_in_final <= 0:  # todo
+            if self.idx_stop != -1:
+                self.publish_dbw_enabled(False)
+            else:
+                return
+        else:
+            for i in range(idx_stop_in_final, -1, -1):
+                tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
+                if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
+                    self.set_waypoint_velocity(self.final_waypoints, i, tmp_vel)
+            del self.final_waypoints[idx_stop_in_final + 1:-1]
+            del self.final_waypoints[-1]
+
 
     def publish_final_waypoints(self):
-        rospy.logdebug('WaypointUpdater::publish_final_waypoints (enter)')
+        #rospy.logdebug('WaypointUpdater::publish_final_waypoints (enter)')
         lane = Lane()
         lane.header.stamp = rospy.Time(0)
         lane.waypoints = self.final_waypoints
+        #rospy.logdebug("length final wps: %s", len(self.final_waypoints))
         self.pub_final_waypoints.publish(lane)
+
+    def publish_dbw_enabled(self, dbw_enabled):
+        if dbw_enabled != self.dbw_enabled:
+            self.dbw_enabled = dbw_enabled
+            bool_ros = Bool()
+            bool_ros.data = self.dbw_enabled
+            self.pub_dbw_enabled.publish(bool_ros)
 
 
 if __name__ == '__main__':
