@@ -42,7 +42,7 @@ class DBWNode(object):
 
 
     def __init__(self):
-        rospy.init_node('dbw_node')
+        rospy.init_node('dbw_node', log_level=rospy.DEBUG)
 
         vehicle_mass = rospy.get_param('~vehicle_mass', 1736.35)
         fuel_capacity = rospy.get_param('~fuel_capacity', 13.5)
@@ -100,7 +100,7 @@ class DBWNode(object):
     def cb_twist_cmd(self,msg):
         """callback for receiving TwistStamped message on /twist_cmd topic"""
         # log message
-        rospy.logdebug('DBWNode::twist_cmd_cb %s',msg)
+        # rospy.logdebug('DBWNode::twist_cmd_cb %s',msg)
         # store message
         self.twist    = msg.twist
         self.velocity = msg.twist.linear.x
@@ -110,7 +110,7 @@ class DBWNode(object):
     def cb_current_velocity(self,msg):
         """callback for receiving TwistStamped message on /current_velocity topic"""
         # log message
-        rospy.logdebug('DBWNode::velocity_cb %s',msg)
+        # rospy.logdebug('DBWNode::velocity_cb %s',msg)
         # store message
         self.current_twist    = msg.twist
         self.current_velocity = msg.twist.linear.x
@@ -119,7 +119,7 @@ class DBWNode(object):
     def cb_vehicle_dbw_enabled(self,msg):
         """callback for receiving Bool message on /vehicle/dbw_enabled topic"""
         # log message
-        rospy.logdebug('DBWNode::dbw_enabled_cb %s',msg)
+        # rospy.logdebug('DBWNode::dbw_enabled_cb %s',msg)
         # store message
         self.dbw = bool(msg.data)
 
@@ -128,7 +128,8 @@ class DBWNode(object):
         rate = rospy.Rate(50) # 50Hz
 
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
+
+            # Done: Get predicted throttle, brake, and steering using `twist_controller`
             # You should only publish the control commands if dbw is enabled
             # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
             #                                                     <proposed angular velocity>,
@@ -137,22 +138,20 @@ class DBWNode(object):
             #                                                     <any other argument you need>)
             #
 
-            if self.force_brake:
+            if self.dbw and self.force_brake:
                 self.publish(0, 10000, 0)
+                rate.sleep()  # important
                 continue
 
             # Check that input values are ok
-            if (self.twist is not None) and (self.current_twist is not None) :
+            if self.dbw and self.twist is not None and self.current_twist is not None:
                 # Get throttle, break, steer by controller
                 throttle, brake, steer = self.controller.control(self.velocity,
                                         self.yaw, self.current_velocity, self.dbw)
-
-            # Publish throttle, break, steer values
-            if self.dbw:
+                # Publish throttle, break, steer values
                 self.publish(throttle, brake, steer)
 
             rate.sleep()
-
 
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()
