@@ -71,6 +71,7 @@ class DBWNode(object):
         rospy.Subscriber('/twist_cmd',           TwistStamped, self.cb_twist_cmd)
         rospy.Subscriber('/current_velocity',    TwistStamped, self.cb_current_velocity)
         rospy.Subscriber('/vehicle/dbw_enabled', Bool,         self.cb_vehicle_dbw_enabled)
+        rospy.Subscriber('/vehicle/force_brake', Bool,         self.cb_force_brake)
 
         # Setup import twist_controller
         # TODO Note: min_speed is set to 0.4 which is draft - to be tuned
@@ -86,11 +87,14 @@ class DBWNode(object):
         self.dbw              = False
         self.current_twist    = None
         self.current_velocity = None
+        self.force_brake = False
 
         self.loop()
 
 
     # Callbacks for subscribtions
+    def cb_force_brake(self, msg):
+        self.force_brake = bool(msg.data)
 
 
     def cb_twist_cmd(self,msg):
@@ -125,7 +129,7 @@ class DBWNode(object):
 
         while not rospy.is_shutdown():
 
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
+            # Done: Get predicted throttle, brake, and steering using `twist_controller`
             # You should only publish the control commands if dbw is enabled
             # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
             #                                                     <proposed angular velocity>,
@@ -134,23 +138,20 @@ class DBWNode(object):
             #                                                     <any other argument you need>)
             #
 
+            if self.dbw and self.force_brake:
+                self.publish(0, 10000, 0)
+                rate.sleep()  # important
+                continue
 
             # Check that input values are ok
-            if (self.twist is not None) and (self.current_twist is not None):
-                if self.dbw and self.velocity == 0 and self.yaw == 0:  # no waypoints in the received topic final_waypoints
-                    self.publish(0, 10000, 0)  # force to brake
-                    rate.sleep()
-                    continue
+            if self.dbw and self.twist is not None and self.current_twist is not None:
                 # Get throttle, break, steer by controller
                 throttle, brake, steer = self.controller.control(self.velocity,
                                         self.yaw, self.current_velocity, self.dbw)
                 # Publish throttle, break, steer values
-                if self.dbw:
-                    self.publish(throttle, brake, steer)
-
+                self.publish(throttle, brake, steer)
 
             rate.sleep()
-
 
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()
