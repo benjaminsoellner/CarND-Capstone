@@ -92,7 +92,7 @@ class WaypointUpdater(object):
         # Create /final_waypoints publisher
         self.pub_final_waypoints = rospy.Publisher('final_waypoints',
                                             Lane, queue_size=1)
-        self.pub_dbw_enabled = rospy.Publisher('vehicle/dbw_enabled', Bool, queue_size=1)
+        self.pub_force_brake = rospy.Publisher('vehicle/force_brake', Bool, queue_size=1)
 
         # Member variables
         self.pose_stamped = PoseStamped()
@@ -100,7 +100,7 @@ class WaypointUpdater(object):
         self.final_waypoints = []
 
         self.idx_stop = -1
-        self.dbw_enabled = True
+        self.force_brake = False
         self.current_vehicle_state = STATE_ACC
 
         self.update_logger_time()
@@ -240,16 +240,16 @@ class WaypointUpdater(object):
             self.accelerate_vehicle()
 
     def accelerate_vehicle(self):
-        self.publish_dbw_enabled(True)
+        self.publish_force_brake(False)
         self.log_vehicle_state(STATE_ACC)
 
     def stop_vehicle(self):
-        self.publish_dbw_enabled(False)
+        self.publish_force_brake(True)
         self.log_vehicle_state(STATE_STOP)
 
     def decelerate_vehicle(self, idx_stop_in_final):
         self.log_vehicle_state(STATE_DEC)
-        self.publish_dbw_enabled(True)
+        self.publish_force_brake(False)
         for i in range(idx_stop_in_final, -1, -1):
             tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
             if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
@@ -278,12 +278,12 @@ class WaypointUpdater(object):
         #rospy.logdebug("length final wps: %s", len(self.final_waypoints))
         self.pub_final_waypoints.publish(lane)
 
-    def publish_dbw_enabled(self, dbw_enabled):
-        if dbw_enabled != self.dbw_enabled:
-            self.dbw_enabled = dbw_enabled
+    def publish_force_brake(self, force_brake):
+        if force_brake != self.force_brake:
+            self.force_brake = force_brake
             bool_ros = Bool()
-            bool_ros.data = self.dbw_enabled
-            self.pub_dbw_enabled.publish(bool_ros)
+            bool_ros.data = self.force_brake
+            self.pub_force_brake.publish(bool_ros)
 
 
 if __name__ == '__main__':
