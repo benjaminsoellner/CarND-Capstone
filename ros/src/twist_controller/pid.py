@@ -33,8 +33,8 @@ class PID(object):
 
         val = max(self.min, min(y, self.max))
 
-        rospy.logdebug('PID::step y, val, cte (max, min) = %f,  %f,  %f (%f, %f) ',
-                        y, val, error, self.max, self.min)
+        # rospy.logdebug('PID::step y, val, cte (max, min) = %f,  %f,  %f (%f, %f) ',
+        #                 y, val, error, self.max, self.min)
 
         if val > self.max:
             val = self.max
@@ -44,5 +44,5 @@ class PID(object):
             self.int_val = integral
         self.last_error = error
 
-        rospy.logdebug('PID::step return %f ',val)
+        # rospy.logdebug('PID::step return %f ',val)
         return val
