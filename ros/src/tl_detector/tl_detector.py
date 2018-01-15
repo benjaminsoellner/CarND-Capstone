@@ -18,10 +18,9 @@ STATE_COUNT_THRESHOLD = 3  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
 MAX_TL_DIST = 100  # TODO fine-tune
-
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
-BYPASS_TL_CLASSIFIER = False
+BYPASS_TL_CLASSIFIER = True
 
 
 def dist(point1, point2):
@@ -100,7 +99,7 @@ def find_point_ahead_of_pose(list_of_points, pose):
         angle = math.atan2(closest_y-other_point.y, closest_x-other_point.x)
         diff_angle = math.fabs(angle-theta)
         # if not, the next surely will be (% takes care of rotating list)
-        if diff_angle > math.pi / 4:
+        if math.pi * 1.5 > diff_angle > math.pi / 2:
             closest_point_index = (closest_point_index+1) % len(list_of_points)
     return closest_point_index
 
@@ -111,37 +110,8 @@ class TLDetector(object):
 
     def __init__(self):
 
-        # configuration
-        # stored camera_info: w, h = 800, 600 and 8 points as a list
-        self.config = yaml.load(rospy.get_param("/traffic_light_config"))
-        # self.cfg_camera_info = self.config['camera_info'] # TODO not needed?
-        self.cfg_stop_line_positions = self.config['stop_line_positions']
-
-        self.upcoming_red_light_pub = rospy.Publisher(
-            '/traffic_waypoint', Int32, queue_size=1)
-
-        # used for classification
-        self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
-        self.listener = tf.TransformListener() # TODO needed?
-
-        # telemetry
-        self.pose = None # current pose
-        self.bare_waypoints = None # waypoints, "bare" means simple list of x/y coordinates
-        self.camera_image = None # current camera image
-        self.lights = None # current list of traffic lights
-        self.light_ahead = None # traffic light index ahead of current pose
-
-        # higher level state
-        self.state = TrafficLight.UNKNOWN
-        self.uncertain_state = TrafficLight.UNKNOWN # uncertain state, kept until occured a couple of times
-        self.state_count = 0 # counter to derive certain from uncertain state
-        self.target_waypoint = None # closest waypoint to traffic light
-
         rospy.init_node('tl_detector', log_level=rospy.DEBUG)
-
-        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
-        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
+        rospy.logdebug("TLDetector::__init__ started.")
 
         '''
         /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
@@ -152,6 +122,33 @@ class TLDetector(object):
         '''
         rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
         rospy.Subscriber('/image_color', Image, self.cb_image_color)
+        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
+        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
+        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+
+        # configuration
+        # stored camera_info: w, h = 800, 600 and 8 points as a list
+        self.config = yaml.load(rospy.get_param("/traffic_light_config"))
+        # self.cfg_camera_info = self.config['camera_info'] # TODO not needed?
+        self.cfg_stop_line_positions = self.config['stop_line_positions']
+
+        # telemetry
+        self.pose = None # current pose
+        self.bare_waypoints = None # waypoints, "bare" means simple list of x/y coordinates
+        self.camera_image = None # current camera image
+        self.lights = None # current list of traffic lights
+        self.light_ahead = None # traffic light index ahead of current pose
+
+        # higher level state
+        self.state = TrafficLight.UNKNOWN
+        self.uncertain_state = TrafficLight.UNKNOWN  # uncertain state, kept until occured a couple of times
+        self.state_count = 0  # counter to derive certain from uncertain state
+        self.target_waypoint = None  # closest waypoint to traffic light
+
+        # used for classification
+        self.bridge = CvBridge()
+        self.light_classifier = TLClassifier()
+        self.listener = tf.TransformListener()  # TODO needed?
         
         rospy.spin()
 
