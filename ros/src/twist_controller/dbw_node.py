@@ -42,7 +42,7 @@ class DBWNode(object):
 
 
     def __init__(self):
-        rospy.init_node('dbw_node')
+        rospy.init_node('dbw_node', log_level=rospy.DEBUG)
 
         vehicle_mass = rospy.get_param('~vehicle_mass', 1736.35)
         fuel_capacity = rospy.get_param('~fuel_capacity', 13.5)
@@ -96,7 +96,7 @@ class DBWNode(object):
     def cb_twist_cmd(self,msg):
         """callback for receiving TwistStamped message on /twist_cmd topic"""
         # log message
-        rospy.logdebug('DBWNode::twist_cmd_cb %s',msg)
+        # rospy.logdebug('DBWNode::twist_cmd_cb %s',msg)
         # store message
         self.twist    = msg.twist
         self.velocity = msg.twist.linear.x
@@ -106,7 +106,7 @@ class DBWNode(object):
     def cb_current_velocity(self,msg):
         """callback for receiving TwistStamped message on /current_velocity topic"""
         # log message
-        rospy.logdebug('DBWNode::velocity_cb %s',msg)
+        # rospy.logdebug('DBWNode::velocity_cb %s',msg)
         # store message
         self.current_twist    = msg.twist
         self.current_velocity = msg.twist.linear.x
@@ -115,7 +115,7 @@ class DBWNode(object):
     def cb_vehicle_dbw_enabled(self,msg):
         """callback for receiving Bool message on /vehicle/dbw_enabled topic"""
         # log message
-        rospy.logdebug('DBWNode::dbw_enabled_cb %s',msg)
+        # rospy.logdebug('DBWNode::dbw_enabled_cb %s',msg)
         # store message
         self.dbw = bool(msg.data)
 
@@ -124,6 +124,7 @@ class DBWNode(object):
         rate = rospy.Rate(50) # 50Hz
 
         while not rospy.is_shutdown():
+
             # TODO: Get predicted throttle, brake, and steering using `twist_controller`
             # You should only publish the control commands if dbw is enabled
             # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
@@ -133,17 +134,20 @@ class DBWNode(object):
             #                                                     <any other argument you need>)
             #
 
+
             # Check that input values are ok
-            if (self.twist is not None) and (self.current_twist is not None) :
+            if (self.twist is not None) and (self.current_twist is not None):
+                if self.dbw and self.velocity == 0 and self.yaw == 0:  # no waypoints in the received topic final_waypoints
+                    self.publish(0, 10000, 0)  # force to brake
+                    rate.sleep()
+                    continue
                 # Get throttle, break, steer by controller
                 throttle, brake, steer = self.controller.control(self.velocity,
                                         self.yaw, self.current_velocity, self.dbw)
+                # Publish throttle, break, steer values
+                if self.dbw:
+                    self.publish(throttle, brake, steer)
 
-            # Publish throttle, break, steer values
-            if self.dbw:
-                self.publish(throttle, brake, steer)
-            else:
-                self.publish(0, 10000, 0)
 
             rate.sleep()
 
