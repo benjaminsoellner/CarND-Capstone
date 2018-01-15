@@ -180,7 +180,7 @@ class WaypointUpdater(object):
         heading = math.atan2(map_y - position[1], map_x - position[0])
         angle = math.fabs(theta - heading)
         # if not, the next surely will be
-        if angle > math.pi / 4:
+        if math.pi * 1.5 > angle > math.pi / 2:
             self.index += 1
         # if waypoint index exceeds length of list, wrap around to the start of list
         self.index = self.norm_index(self.index)
