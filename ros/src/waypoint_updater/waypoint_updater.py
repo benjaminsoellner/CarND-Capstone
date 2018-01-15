@@ -27,7 +27,7 @@ as well as to verify your TL classifier.
 '''
 
 # TODO fine-tune lookahead WPS and waypoint refresh rate for performance
-LOOKAHEAD_WPS = 100  # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 80  # Number of waypoints we will publish. You can change this number
 REFRESH_RATE_IN_HZ = 10
 DECREASE_VEL = 0.15
 STATE_ACC, STATE_DEC, STATE_STOP = 0, 1, 2  # vehicle state (Acceleration can also mean: keep max. velocity)
@@ -92,6 +92,8 @@ class WaypointUpdater(object):
         # Create /final_waypoints publisher
         self.pub_final_waypoints = rospy.Publisher('final_waypoints',
                                             Lane, queue_size=1)
+        self.pub_force_brake = rospy.Publisher('vehicle/force_brake', Bool, queue_size=1)
+
 
         # Member variables
         self.pose_stamped = PoseStamped()
@@ -99,6 +101,8 @@ class WaypointUpdater(object):
         self.final_waypoints = []
 
         self.idx_stop = -1
+        self.force_brake = False
+
         self.current_vehicle_state = STATE_ACC
 
         self.update_logger_time()
@@ -228,24 +232,27 @@ class WaypointUpdater(object):
             #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
             if idx_stop_in_final >= LOOKAHEAD_WPS:  # out of range
                 self.accelerate_vehicle()
-            elif idx_stop_in_final < -1:  # passed the stop line
+            elif idx_stop_in_final < 0:  # passed the stop line
                 self.accelerate_vehicle()
-            elif -2 < idx_stop_in_final <= 0:  # right at the stop line
+            elif 0 <= idx_stop_in_final <= 1:  # right at the stop line
                 self.stop_vehicle()
             else:  # is near (before) the stop line
                 self.decelerate_vehicle(idx_stop_in_final)
         else:  # traffic light is green
             self.accelerate_vehicle()
 
-    def accelerate_vehicle(self):
+    def accelerate_vehicle(self):  # can also mean: keep the velocity
+        self.publish_force_brake(False)
         self.log_vehicle_state(STATE_ACC)
 
     def stop_vehicle(self):
-        self.final_waypoints = []  # important
+        self.final_waypoints = []  # for less calculation
+        self.publish_force_brake(True)
         self.log_vehicle_state(STATE_STOP)
 
     def decelerate_vehicle(self, idx_stop_in_final):
         self.log_vehicle_state(STATE_DEC)
+        self.publish_force_brake(False)
         for i in range(idx_stop_in_final, -1, -1):
             tmp_vel = 0.0 + (idx_stop_in_final - i) * DECREASE_VEL
             if tmp_vel < self.get_waypoint_velocity(self.final_waypoints[i]):
@@ -273,6 +280,13 @@ class WaypointUpdater(object):
         lane.waypoints = self.final_waypoints
         #rospy.logdebug("length final wps: %s", len(self.final_waypoints))
         self.pub_final_waypoints.publish(lane)
+
+    def publish_force_brake(self, force_brake):
+        if force_brake != self.force_brake:
+            self.force_brake = force_brake
+            bool_ros = Bool()
+            bool_ros.data = self.force_brake
+            self.pub_force_brake.publish(bool_ros)
 
 
 if __name__ == '__main__':
