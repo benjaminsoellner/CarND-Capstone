@@ -222,6 +222,9 @@ class WaypointUpdater(object):
         self.final_waypoints = final_waypoints
 
     def update_velocity(self):
+        if self.index >= len(self.base_waypoints) - 3:  # right at the end of the track
+            self.stop_vehicle()
+            return
         if self.idx_stop != -1:  # traffic light is yellow or red
             idx_stop_in_final = self.idx_stop - self.index
             #rospy.logdebug("idx_stop_in_final: %s", idx_stop_in_final)
