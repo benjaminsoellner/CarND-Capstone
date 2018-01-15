@@ -18,7 +18,6 @@ STATE_COUNT_THRESHOLD = 3  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
 MAX_TL_DIST = 100  # TODO fine-tune
-
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
@@ -103,7 +102,7 @@ def find_point_ahead_of_pose(list_of_points, pose):
         angle = math.atan2(closest_y-other_point.y, closest_x-other_point.x)
         diff_angle = math.fabs(angle-theta)
         # if not, the next surely will be (% takes care of rotating list)
-        if diff_angle > math.pi / 4:
+        if math.pi * 1.5 > diff_angle > math.pi / 2:
             closest_point_index = (closest_point_index+1) % len(list_of_points)
     return closest_point_index
 
