@@ -99,7 +99,7 @@ def find_point_ahead_of_pose(list_of_points, pose):
         angle = math.atan2(closest_y-other_point.y, closest_x-other_point.x)
         diff_angle = math.fabs(angle-theta)
         # if not, the next surely will be (% takes care of rotating list)
-        if diff_angle > math.pi / 4:
+        if math.pi * 1.5 > diff_angle > math.pi / 2:
             closest_point_index = (closest_point_index+1) % len(list_of_points)
     return closest_point_index
 
@@ -112,9 +112,6 @@ class TLDetector(object):
         rospy.init_node('tl_detector', log_level=rospy.DEBUG)
         rospy.logdebug("TLDetector::__init__ started.")
 
-        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
-        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
-
         '''
         /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
         helps you acquire an accurate ground truth data source for the traffic light
@@ -124,7 +121,8 @@ class TLDetector(object):
         '''
         rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
         rospy.Subscriber('/image_color', Image, self.cb_image_color)
-
+        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
+        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         # configuration
