@@ -159,6 +159,7 @@ class TLDetector(object):
         rospy.spin()
 
 
+
     def cb_base_waypoints(self, waypoints):
         """callback for receiving Lane message on /cb_base_waypoints topic"""
         # only initialize waypoints once (save some ressources)
