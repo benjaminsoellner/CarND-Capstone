@@ -20,7 +20,7 @@ STATE_COUNT_THRESHOLD = 3  # TODO fine-tune
 MAX_TL_DIST = 80  # TODO fine-tune
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
-BYPASS_TL_CLASSIFIER = True
+BYPASS_TL_CLASSIFIER = False
 
 
 def dist(point1, point2):
@@ -263,7 +263,7 @@ class TLDetector(object):
         if self.has_image:
             # are we close enough to the traffic light so that it would be visible?
             if self.is_light_close_enough():
-                cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+                cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
                 # Get classification
                 return self.light_classifier.get_classification(cv_image)
         else:
