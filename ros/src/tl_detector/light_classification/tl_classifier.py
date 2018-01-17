@@ -2,6 +2,7 @@ import rospy
 from styx_msgs.msg import TrafficLight
 import tensorflow as tf
 import numpy as np
+import time
 
 DETECTION_LIMIT = 0.5
 
@@ -39,11 +40,16 @@ class TLClassifier(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        start_time = time.time()
         # Runs inference on one image on the loaded graph
         with self.inference_graph.as_default():
             # Image is expanded to 4 dims - 1st dim batch size (=1)
             image_4d = np.expand_dims(image, axis=0)
             (boxes, scores, classes, num_det) = self.sess.run([self.d_boxes, self.d_scores, self.d_classes, self.num_d], feed_dict = {self.image_tensor: image_4d})
+        
+        end_time = time.time()
+
+        rospy.logdebug("Time for classification: {0}s".format(end_time - start_time))
 
         # Inference returns a (fixed) total of self.num_d detections - even those with low probabilities
         r_boxes = []
@@ -53,6 +59,7 @@ class TLClassifier(object):
 
         # If the highest score is below detection probability, there is no traffic light visible or not clear enough, return unknown
         if scores[0][0] < DETECTION_LIMIT:
+            rospy.logdebug("No traffic light detected: UNKNOWN")
             return TrafficLight.UNKNOWN
 
         # Keep all results above probability of DETECTION_LIMIT
@@ -70,10 +77,13 @@ class TLClassifier(object):
 
         for classification in r_classes:
             if classification in red:
+                rospy.logdebug("Red traffic light detected")
                 return TrafficLight.RED
             elif classification in yellow:
                 yellow_or_not = True
         if yellow_or_not:
+            rospy.logdebug("Yellow traffic light detected")
             return TrafficLight.YELLOW
         else:
+            rospy.logdebug("Green traffic light detected")
             return TrafficLight.GREEN
