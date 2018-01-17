@@ -11,7 +11,7 @@ class TLClassifier(object):
         rospy.logdebug("TLClassifier::__init__ started.")
 
         # Location of pre-trained inference model
-        model_path = './light_classification/model/frozen_inference_graph.pb'
+        model_path = './light_classification/models/frozen_inference_graph_opt.pb'
         self.inference_graph = tf.Graph()
 
         with self.inference_graph.as_default():
@@ -46,7 +46,7 @@ class TLClassifier(object):
             # Image is expanded to 4 dims - 1st dim batch size (=1)
             image_4d = np.expand_dims(image, axis=0)
             (boxes, scores, classes, num_det) = self.sess.run([self.d_boxes, self.d_scores, self.d_classes, self.num_d], feed_dict = {self.image_tensor: image_4d})
-        
+
         end_time = time.time()
 
         rospy.logdebug("Time for classification: {0}s".format(end_time - start_time))
