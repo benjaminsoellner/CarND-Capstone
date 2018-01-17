@@ -7,14 +7,14 @@
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 TF_SRC_DIR="/home/student/tensorflow-src/tensorflow"
-TF_MODEL_ORIGINAL="$SCRIPTPATH/../model/frozen_inference_graph.pb"
-TF_MODEL_OPTIMIZED="$SCRIPTPATH/../model/frozen_inference_graph_opt.pb"
+TF_MODEL_ORIGINAL="$SCRIPTPATH/../models/frozen_inference_graph.pb"
+TF_MODEL_OPTIMIZED="$SCRIPTPATH/../models/frozen_inference_graph_opt.pb"
 TF_MODEL_TENSOR_IN="image_tensor"
-TF_MODEL_TENSOR_OUT="detection_classes,detection_scores,detection_boxes"
+TF_MODEL_TENSOR_OUT="detection_boxes,detection_scores,detection_classes,num_detections"
 
 cd $TF_SRC_DIR
 
-bazel build tensorflow/tools/graph_transforms:transform_graph
+#bazel build tensorflow/tools/graph_transforms:transform_graph
 bazel-bin/tensorflow/tools/graph_transforms/transform_graph \
 --in_graph=$TF_MODEL_ORIGINAL \
 --out_graph=$TF_MODEL_OPTIMIZED \

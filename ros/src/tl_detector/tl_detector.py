@@ -22,6 +22,9 @@ MAX_TL_DIST = 80  # TODO fine-tune
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
 
+# Use this constant (!= 1) to throttle the classifier in case of performance issues
+CLASSIFY_EVERY_NTH_FRAME = 1
+
 
 def dist(point1, point2):
     """Helper function to calculate the eucledian distance between two points.
@@ -110,8 +113,38 @@ class TLDetector(object):
 
     def __init__(self):
 
+        # configuration
+        # stored camera_info: w, h = 800, 600 and 8 points as a list
+        self.config = yaml.load(rospy.get_param("/traffic_light_config"))
+        # self.cfg_camera_info = self.config['camera_info'] # TODO not needed?
+        self.cfg_stop_line_positions = self.config['stop_line_positions']
+
+        self.upcoming_red_light_pub = rospy.Publisher(
+            '/traffic_waypoint', Int32, queue_size=1)
+
+        # used for classification
+        self.bridge = CvBridge()
+        self.light_classifier = TLClassifier()
+        self.listener = tf.TransformListener() # TODO needed?
+
+        # telemetry
+        self.pose = None # current pose
+        self.bare_waypoints = None # waypoints, "bare" means simple list of x/y coordinates
+        self.camera_image = None # current camera image
+        self.lights = None # current list of traffic lights
+        self.light_ahead = None # traffic light index ahead of current pose
+
+        # higher level state
+        self.classification_age = 0 # used to count the number of frames since last classification
+        self.state = TrafficLight.UNKNOWN
+        self.uncertain_state = TrafficLight.UNKNOWN # uncertain state, kept until occured a couple of times
+        self.state_count = 0 # counter to derive certain from uncertain state
+        self.target_waypoint = None # closest waypoint to traffic light
+
         rospy.init_node('tl_detector', log_level=rospy.DEBUG)
-        rospy.logdebug("TLDetector::__init__ started.")
+
+        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
+        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
 
         '''
         /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
@@ -122,35 +155,9 @@ class TLDetector(object):
         '''
         rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.cb_vehicle_traffic_lights)
         rospy.Subscriber('/image_color', Image, self.cb_image_color)
-        rospy.Subscriber('/current_pose', PoseStamped, self.cb_current_pose)
-        self.sub_base_waypoints = rospy.Subscriber('/base_waypoints', Lane, self.cb_base_waypoints)
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
-        # configuration
-        # stored camera_info: w, h = 800, 600 and 8 points as a list
-        self.config = yaml.load(rospy.get_param("/traffic_light_config"))
-        # self.cfg_camera_info = self.config['camera_info'] # TODO not needed?
-        self.cfg_stop_line_positions = self.config['stop_line_positions']
-
-        # telemetry
-        self.pose = None # current pose
-        self.bare_waypoints = None # waypoints, "bare" means simple list of x/y coordinates
-        self.camera_image = None # current camera image
-        self.lights = None # current list of traffic lights
-        self.light_ahead = None # traffic light index ahead of current pose
-
-        # higher level state
-        self.state = TrafficLight.UNKNOWN
-        self.uncertain_state = TrafficLight.UNKNOWN  # uncertain state, kept until occured a couple of times
-        self.state_count = 0  # counter to derive certain from uncertain state
-        self.target_waypoint = None  # closest waypoint to traffic light
-
-        # used for classification
-        self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
-        self.listener = tf.TransformListener()  # TODO needed?
-        
         rospy.spin()
+
 
 
     def cb_base_waypoints(self, waypoints):
@@ -202,18 +209,25 @@ class TLDetector(object):
         self.camera_image = msg
         # check that we are not bypassing the classifier
         if not BYPASS_TL_CLASSIFIER:
-            new_state = self.get_state_from_camera()
-            # with camera, new state has to occur at least a number of times ...
-            if self.state != new_state:
-                self.state_count = -1
-                self.uncertain_state = new_state
-            elif self.state_count == STATE_COUNT_THRESHOLD:
-                # ... before it is set
-                self.state = self.uncertain_state
-                rospy.logdebug("TLDetector::cb_image_color is now sure that traffic light #%s has state: %s",
-                        self.light_ahead, self.state)
-            if self.state_count < STATE_COUNT_THRESHOLD+1:
-                self.state_count += 1
+            if CLASSIFY_EVERY_NTH_FRAME == self.classification_age+1:
+                self.classification_age = 0
+                new_state = self.get_state_from_camera()
+                # with camera, new state has to occur at least a number of times ...
+                rospy.logdebug("TLDetector::cb_image_color classified traffic light #%s with state: %s",
+                        self.light_ahead, self.uncertain_state)
+                if self.state != new_state:
+                    self.state_count = -1
+                    self.uncertain_state = new_state
+                elif self.state_count == STATE_COUNT_THRESHOLD:
+                    # ... before it is set
+                    self.state = self.uncertain_state
+                    rospy.logdebug("TLDetector::cb_image_color is now sure that traffic light #%s has state: %s",
+                            self.light_ahead, self.state)
+                if self.state_count < STATE_COUNT_THRESHOLD+1:
+                    self.state_count += 1
+            else:
+                self.classification_age += 1
+                rospy.logdebug("TLDetector::cb_image_color skipping image (%s)", self.classification_age)
         else:
             # bypass classifier if we use simulator data
             new_state = self.get_state_from_simulator()
