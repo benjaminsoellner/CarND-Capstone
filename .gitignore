@@ -11,5 +11,3 @@ traffic_light_bag_files
 
 .idea
 mynotes
-
-ros/src/tl_detector/light_classification/model
