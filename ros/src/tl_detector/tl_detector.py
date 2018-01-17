@@ -23,7 +23,7 @@ MAX_TL_DIST = 80  # TODO fine-tune
 BYPASS_TL_CLASSIFIER = False
 
 # Use this constant (!= 1) to throttle the classifier in case of performance issues
-CLASSIFY_EVERY_NTH_FRAME = 10
+CLASSIFY_EVERY_NTH_FRAME = 1
 
 
 def dist(point1, point2):
