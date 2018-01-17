@@ -14,7 +14,7 @@ import yaml
 import math
 
 # Number of times a traffic light state needs to be observed until it is deemed reliable
-STATE_COUNT_THRESHOLD = 3  # TODO fine-tune
+STATE_COUNT_THRESHOLD = 1  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
 MAX_TL_DIST = 80  # TODO fine-tune
