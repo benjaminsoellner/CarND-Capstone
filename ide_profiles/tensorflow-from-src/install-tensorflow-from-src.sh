@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/student
+cd /var/team-herbie
 
 # do all tensorflow-from-source stuff in ~/tensorflow-src
 mkdir tensorflow-src
