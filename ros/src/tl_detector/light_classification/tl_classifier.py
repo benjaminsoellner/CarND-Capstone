@@ -14,7 +14,7 @@ class TLClassifier(object):
         rospy.logdebug("TLClassifier::__init__ started.")
 
         # Location of pre-trained inference model
-        model_path = './light_classification/model/frozen_inference_graph.pb'
+        model_path = './light_classification/models/frozen_inference_graph.pb'
         self.inference_graph = tf.Graph()
 
         with self.inference_graph.as_default():
@@ -137,12 +137,12 @@ def detect_color(crop_image):
     thr_high_red = 10
 
     shape = crop_image.shape
-    crop_size = shape[0] * shape[1]
+    # crop_size = float(shape[0] * shape[1])
 
     # Convert image to HSV colorspace
     tl_hsv = cv2.cvtColor(crop_image, cv2.COLOR_RGB2HSV)
     # Select only the Hue channel (channel 0)
-    tl_hue = tl_hsv[:,:,0]
+    tl_hue = tl_hsv[:, :, 0]
 
     # Masks in the image with True for each pixel in the range for red, yellow and green, False otherwise
     green_threshold = ((tl_hue > thr_low_green) & (tl_hue < thr_high_green))
@@ -150,9 +150,9 @@ def detect_color(crop_image):
     yellow_threshold = ((tl_hue > thr_low_yellow) & (tl_hue < thr_high_yellow))
     
     # Calculates the ratio of red, green and yellow among all pixels in the image
-    green_ratio = (green_threshold == True).sum() / crop_size
-    red_ratio = (red_threshold == True).sum() / crop_size
-    yellow_ratio = (yellow_threshold == True).sum() / crop_size
+    green_ratio = (green_threshold == True).sum()  # / crop_size
+    red_ratio = (red_threshold == True).sum()  # / crop_size
+    yellow_ratio = (yellow_threshold == True).sum()  # / crop_size
 
     # Finds the index with the highest ratio
     detection = np.argmax([red_ratio, yellow_ratio, green_ratio])

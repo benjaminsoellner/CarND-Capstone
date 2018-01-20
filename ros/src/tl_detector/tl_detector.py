@@ -14,10 +14,10 @@ import yaml
 import math
 
 # Number of times a traffic light state needs to be observed until it is deemed reliable
-STATE_COUNT_THRESHOLD = 1  # TODO fine-tune
+STATE_COUNT_THRESHOLD = 0  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
-MAX_TL_DIST = 80  # TODO fine-tune
+MAX_TL_DIST = 120  # TODO fine-tune
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
@@ -26,7 +26,7 @@ BYPASS_TL_CLASSIFIER = False
 SAVE_SIM_IMAGES = False
 
 # Use this constant (!= 1) to throttle the classifier in case of performance issues
-CLASSIFY_EVERY_NTH_FRAME = 1
+CLASSIFY_EVERY_NTH_FRAME = 5
 
 
 def dist(point1, point2):
@@ -140,7 +140,7 @@ class TLDetector(object):
 
         # higher level state
         self.classification_age = 0 # used to count the number of frames since last classification
-        self.state = TrafficLight.UNKNOWN
+        self.state = TrafficLight.RED
         self.uncertain_state = TrafficLight.UNKNOWN # uncertain state, kept until occured a couple of times
         self.state_count = 0 # counter to derive certain from uncertain state
         self.target_waypoint = None # closest waypoint to traffic light
@@ -228,9 +228,10 @@ class TLDetector(object):
                 self.classification_age = 0
                 new_state = self.get_state_from_camera()
                 # with camera, new state has to occur at least a number of times ...
-                rospy.logdebug("TLDetector::cb_image_color classified traffic light #%s with state: %s",
-                        self.light_ahead, self.uncertain_state)
-                if self.state != new_state:
+                if new_state:  # when False -> not close enough
+                    rospy.logdebug("TLDetector::cb_image_color classified traffic light #%s with state: %s",
+                                   self.light_ahead, self.uncertain_state)
+                if self.uncertain_state != new_state:
                     self.state_count = -1
                     self.uncertain_state = new_state
                 elif self.state_count == STATE_COUNT_THRESHOLD:
@@ -242,7 +243,7 @@ class TLDetector(object):
                     self.state_count += 1
             else:
                 self.classification_age += 1
-                rospy.logdebug("TLDetector::cb_image_color skipping image (%s)", self.classification_age)
+                # rospy.logdebug("TLDetector::cb_image_color skipping image (%s)", self.classification_age)
         else:
             # bypass classifier if we use simulator data
             new_state = self.get_state_from_simulator()
@@ -295,13 +296,17 @@ class TLDetector(object):
                 cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
                 # Get classification
                 return self.light_classifier.get_classification(cv_image)
+            else:
+                return False  # not close enough
         else:
             return TrafficLight.UNKNOWN
 
 
     def publish_traffic_waypoint(self):
         # do we have all telemetry? is there a red light?
-        if self.target_waypoint is not None and (self.state == TrafficLight.RED or self.state == TrafficLight.YELLOW):
+        if self.target_waypoint is not None and (self.state == TrafficLight.RED or
+                                                 self.state == TrafficLight.YELLOW or
+                                                 self.state == TrafficLight.UNKNOWN):
             # then publish its waypoint downstream to stop the car
             self.upcoming_red_light_pub.publish(Int32(self.target_waypoint))
         else:
