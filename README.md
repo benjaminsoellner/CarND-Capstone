@@ -8,8 +8,8 @@
 |Name|E-Mail|Github|Role|
 |----|------|----|----|
 |Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner||
-|Bernhard Rode|mail@bernhardrode.de|bernhardrode||
-|Carsten Mielenz|carsten.mielenz.france@gmail.com|carstenMIELENZ||
+|Bernhard Rode|mail@bernhardrode.de|bernhardrode|Project Lead, wp_updater, dbw_node|
+|Carsten Mielenz|carsten.mielenz.france@gmail.com|carstenMIELENZ|dbw_node, twist_controller|
 |Johannes Hallier|johannes.hallier@gmail.com|jhallier||
 |Tianran Wang|tr.wang236@gmail.com|TrW236||
 
