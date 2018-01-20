@@ -22,6 +22,9 @@ MAX_TL_DIST = 80  # TODO fine-tune
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
 
+# set to true to save the images from the simulator run
+SAVE_SIM_IMAGES = False
+
 # Use this constant (!= 1) to throttle the classifier in case of performance issues
 CLASSIFY_EVERY_NTH_FRAME = 1
 
@@ -126,6 +129,7 @@ class TLDetector(object):
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
         self.listener = tf.TransformListener() # TODO needed?
+        self.image_index = 0
 
         # telemetry
         self.pose = None # current pose
@@ -207,6 +211,17 @@ class TLDetector(object):
         '''
         self.has_image = True
         self.camera_image = msg
+
+        # Write image to file for training with simulation images
+        if SAVE_SIM_IMAGES:
+            # Save every n-th image (n=10)
+            if ((self.image_index % 10) == 0):
+                cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+                img_filename = '/home/student/sim_images/' + 'image' + str(self.image_index) + '.jpg'
+                rospy.logdebug(img_filename)
+                cv2.imwrite(img_filename, cv_image)
+            self.image_index += 1
+
         # check that we are not bypassing the classifier
         if not BYPASS_TL_CLASSIFIER:
             if CLASSIFY_EVERY_NTH_FRAME == self.classification_age+1:
