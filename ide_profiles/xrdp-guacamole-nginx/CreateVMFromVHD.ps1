@@ -4,8 +4,8 @@ $Location = "West Europe"
 $VMName = "herbie-vm"
 
 # Retreived from storage account in Azure Portal after VHD upload
-$OSDiskUri = "DefaultEndpointsProtocol=https;AccountName=daiudacity02;AccountKey=h0gCSWb7b7Qcpoj4UqflnCcMZ3eSv7cvrBk1jI/L5QbPhQNeOkZIm10kfqH1wvKd+Jehwj/i0G6+kyRw+8iyzA==;EndpointSuffix=core.windows.net"
-$VMSize = "Standard_D8S_V3"
+$OSDiskUri = "https://daiudacity02.blob.core.windows.net/vhds/udacity-herbie-fixed.vhd"
+$VMSize = "Standard_NC6S_V2"
 
 # Networking
 $NSGName = "herbie-nsg"

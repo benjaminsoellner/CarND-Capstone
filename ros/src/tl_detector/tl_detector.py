@@ -18,6 +18,7 @@ STATE_COUNT_THRESHOLD = 0  # TODO fine-tune
 
 # Distance in meters from which a traffic light can be observed
 MAX_TL_DIST = 120  # TODO fine-tune
+
 # Set to "True" if you want to use the simulator traffic light labels
 # instead of the classifier
 BYPASS_TL_CLASSIFIER = False
