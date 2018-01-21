@@ -1,4 +1,45 @@
-# Modify Users & Groups
+## VM Image and Sizing
+
+Choose this virtual image:
+
+![The Microsoft Data Science VM for Linux (Ubuntu)](data-science-vm.png)
+
+Choose this VM size:
+
+![Chosen Size for the VM: ND6S](vm-size.png)
+
+## Remove Clutter
+```
+sudo rm -rf /anaconda
+#sudo rm -rf /opt/hadoop
+#sudo rm -rf /opt/microsoft/azureml/
+#sudo rm /etc/init.d/tomcat7
+```
+
+## Install X11RDP + RDP
+Do not forget to set a `passwd` for this!
+```
+cd $HOME
+mkdir install
+cd install
+git clone https://github.com/scarygliders/X11RDP-o-Matic.git
+cd X11RDP-o-Matic
+sudo ./X11rdp-o-matic.sh --nocpuoptimize
+sudo ./RDPsesconfig.sh
+sudo apt-get install tightvncserver
+sudo apt-get install xrdp
+```
+
+## Install Guacamole
+SKIP THIS - THIS DOES NOT WORK!
+```
+cd $HOME/install
+wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh
+chmod +x guac-install.sh
+./guac-install.sh
+```
+
+## Modify Users & Groups
 ```
 sudo groupadd herbie
 sudo usermod -a -G herbie student
@@ -7,20 +48,21 @@ sudo mkdir /var/team-herbie
 sudo chown student:herbie /var/team-herbie/ -R
 ```
 
-# Add Project Users
-Use `/ide_profiles/azure-vm/copy_user.sh` script.
-
-# Setup CarND Repo
+## Setup CarND Repo
 ```
-sudo mkdir /var/team-herbie
 cd /var/team-herbie/
+umask 002
+chgrp herbie .
+chgrp herbie * -R
+chmod g+s .
+chmod g+s * -R
 git clone https://github.com/team-herbie/CarND-Capstone.git
-chown student:herbie /var/team-herbie -R
-chmod g+w /var/team-herbie -R
+sudo chown student:herbie /var/team-herbie -R
+sudo chmod g+w /var/team-herbie -R
 cd /var/team-herbie/CarND-Capstone
 ```
 
-# Install ROS
+## Install ROS
 ```
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
@@ -33,7 +75,7 @@ source $HOME/.bashrc
 sudo apt-get install python-rosinstall python-rosinstall-generator python-wstool build-essential -y
 ```
 
-# Install CarND Dependencies
+## Install CarND Dependencies
 ```
 sudo sh -c 'echo "deb [ arch=amd64 ] http://packages.dataspeedinc.com/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-dataspeed-public.list'
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FF6D3CDA
@@ -50,16 +92,17 @@ sudo apt-get install -y ros-$ROS_DISTRO-image-proc
 sudo apt-get install -y netbase
 ```
 
-# xrdp + kde
+## Install tensorflow-from-src
+
+Use `/ide_profiles/tensorflow-from-src/install-tensorflow-from-src.sh` script.
+
+## Install Simulator
+
 ```
-# see http://c-nergy.be/blog/?p=6717
-# for lubuntu (classroom VM):
-#   * https://wademurray.com/2014/xrdp-remote-desktop-on-lubuntu-14-04/
-#   * https://wiki.ubuntu.com/Lubuntu/RemoteDesktop
-#   * https://sourceforge.net/p/guacamole/discussion/1110833/thread/cb16f8b5/
+cd /var/team-herbie
+wget https://github.com/udacity/CarND-Capstone/releases/download/v1.3/linux_sys_int.zip
 ```
 
-# guacamole
-```
-# https://www.chasewright.com/guacamole-with-mysql-on-ubuntu/
-```
+
+## Add Project Users
+Use `/ide_profiles/azure-vm/copy_user.sh` script.

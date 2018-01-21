@@ -7,7 +7,7 @@
 
 |Name|E-Mail|Github|Role|
 |----|------|----|----|
-|Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner||
+|Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner|tl_detector, Neural Network optimization|
 |Bernhard Rode|mail@bernhardrode.de|bernhardrode|Project Lead, wp_updater, dbw_node|
 |Carsten Mielenz|carsten.mielenz.france@gmail.com|carstenMIELENZ|dbw_node, twist_controller|
 |Johannes Hallier|johannes.hallier@gmail.com|jhallier||
@@ -16,9 +16,9 @@
 ## System overview
 
 ![ros-graph](https://github.com/team-herbie/CarND-Capstone/blob/master/imgs/final-project-ros-graph-v2.png)
-### Overview 
+### Overview
 
-There are 3 ROS modules modified: 
+There are 3 ROS modules modified:
 
 * **waypoint_updater**
 
@@ -28,7 +28,7 @@ There are 3 ROS modules modified:
 
 ### Waypoint Updater
 
- 
+
 ### Traffic Light Detector
 
 ### Twist Controller
