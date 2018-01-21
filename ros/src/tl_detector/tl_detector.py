@@ -228,7 +228,7 @@ class TLDetector(object):
                 self.classification_age = 0
                 new_state = self.get_state_from_camera()
                 # with camera, new state has to occur at least a number of times ...
-                if new_state:  # when False -> not close enough
+                if new_state is not False:  # when False -> not close enough
                     rospy.logdebug("TLDetector::cb_image_color classified traffic light #%s with state: %s",
                                    self.light_ahead, self.uncertain_state)
                 if self.uncertain_state != new_state:
