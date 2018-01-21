@@ -37,7 +37,7 @@ that we have created in the `__init__` function.
 '''
 
 
-# author: udacity, carstenMIELENZ
+# author: udacity, carstenMIELENZ, bernhardrode, TrW236
 class DBWNode(object):
 
 

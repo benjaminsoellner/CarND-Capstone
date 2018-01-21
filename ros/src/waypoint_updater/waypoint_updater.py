@@ -27,9 +27,9 @@ as well as to verify your TL classifier.
 '''
 
 # TODO fine-tune lookahead WPS and waypoint refresh rate for performance
-LOOKAHEAD_WPS = 80  # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 120  # Number of waypoints we will publish. You can change this number
 REFRESH_RATE_IN_HZ = 10
-DECREASE_VEL = 0.15
+DECREASE_VEL = 0.1
 STATE_ACC, STATE_DEC, STATE_STOP = 0, 1, 2  # vehicle state (Acceleration can also mean: keep max. velocity)
 
 
@@ -69,7 +69,7 @@ def get_yaw(pose_stamped):
     return euler[2]  # z direction
 
 
-# author: bernhardrode
+# author: bernhardrode, TrW236
 class WaypointUpdater(object):
     """WaypointUpdater Class"""
 
