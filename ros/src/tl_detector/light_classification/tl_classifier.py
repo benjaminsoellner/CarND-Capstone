@@ -14,7 +14,7 @@ class TLClassifier(object):
         rospy.logdebug("TLClassifier::__init__ started.")
 
         # Location of pre-trained inference model
-        model_path = './light_classification/models/frozen_inference_graph_opt.pb'
+        model_path = './light_classification/models/frozen_inference_graph.pb'
         self.inference_graph = tf.Graph()
 
         with self.inference_graph.as_default():
