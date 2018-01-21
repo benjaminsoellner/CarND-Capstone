@@ -7,7 +7,7 @@
 
 |Name|E-Mail|Github|Role|
 |----|------|----|----|
-|Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner|tl_detector, tf graph integration|
+|Benjamin Söllner|benjamin.soellner@daimler.com|benjaminsoellner|tl_detector, tf graph integration, Azure integration VM with GPU|
 |Bernhard Rode|mail@bernhardrode.de|bernhardrode|wp_updater, dbw_node|
 |Carsten Mielenz|carsten.mielenz.france@gmail.com|carstenMIELENZ|dbw_node, twist_controller|
 |Johannes Hallier|johannes.hallier@gmail.com|jhallier|tl_classifier, tf graph integration|
