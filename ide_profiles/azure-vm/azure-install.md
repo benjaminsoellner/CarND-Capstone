@@ -16,9 +16,33 @@ sudo rm -rf /anaconda
 #sudo rm /etc/init.d/tomcat7
 ```
 
-## Install X11RDP + RDP
-Do not forget to set a `passwd` for this!
+## Modify Users & Groups
 ```
+sudo groupadd herbie
+sudo usermod -a -G herbie student
+sudo usermod -g herbie student
+sudo mkdir /var/team-herbie
+sudo chown student:herbie /var/team-herbie/ -R
+```
+
+## Install X11RDP + RDP
+Do not forget to set a `passwd`:
+```
+sudo passwd student
+```
+
+```
+sudo apt-get update
+sudo apt-get install tightvncserver -y
+sudo apt-get install xrdp -y
+sudo apt-get install xfce4
+echo xfce4-session >~/.xsession
+sudo groupadd tsusers
+sudo usermod student -a -g tsusers
+sudo sed -i.bak '/fi/a #xrdp multiple users configuration \n xfce4-session \n' /etc/xrdp/startwm.sh
+sudo service xrdp restart
+
+
 cd $HOME
 mkdir install
 cd install
@@ -26,8 +50,6 @@ git clone https://github.com/scarygliders/X11RDP-o-Matic.git
 cd X11RDP-o-Matic
 sudo ./X11rdp-o-matic.sh --nocpuoptimize
 sudo ./RDPsesconfig.sh
-sudo apt-get install tightvncserver
-sudo apt-get install xrdp
 ```
 
 ## Install Guacamole
@@ -39,26 +61,13 @@ chmod +x guac-install.sh
 ./guac-install.sh
 ```
 
-## Modify Users & Groups
-```
-sudo groupadd herbie
-sudo usermod -a -G herbie student
-sudo usermod -g herbie student
-sudo mkdir /var/team-herbie
-sudo chown student:herbie /var/team-herbie/ -R
-```
-
 ## Setup CarND Repo
 ```
 cd /var/team-herbie/
 umask 002
-chgrp herbie .
-chgrp herbie * -R
-chmod g+s .
-chmod g+s * -R
+sudo chgrp herbie .
+sudo chmod g+ws .
 git clone https://github.com/team-herbie/CarND-Capstone.git
-sudo chown student:herbie /var/team-herbie -R
-sudo chmod g+w /var/team-herbie -R
 cd /var/team-herbie/CarND-Capstone
 ```
 
